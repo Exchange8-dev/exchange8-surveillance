@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:Surveillance
 // SPDX-License-Identifier: Apache-2.0
 
-//! Ex8:SURVEILLANCE service binary — market-abuse detection + case management.
+//! Exchange8:SURVEILLANCE service binary — market-abuse detection + case management.
 //!
 //! Design: `services/surveillance/DESIGN.md`. Core logic in the sibling
 //! modules; this shell wires the tokio HTTP/TLS surface via the platform

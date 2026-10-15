@@ -1,7 +1,7 @@
-# BUSINESS.md: Ex8:Surveillance — Business Requirements & Functionality
+# BUSINESS.md: Exchange8:Surveillance — Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
-> Ex8:Surveillance **does for the business**. For architecture read
+> Exchange8:Surveillance **does for the business**. For architecture read
 > `README.md`; for wire-level detail read `DESIGN.md`.
 
 ## 1. Business Purpose
@@ -43,9 +43,9 @@
 
 | Concern | Owner |
 |---|---|
-| Regulatory report generation from case outcomes | Ex8:Regulatory |
-| The trade/execution event stream this service observes | Ex8:ME / Ex8:Clearing / Ex8:Gateway / Ex8:OMS |
-| Order acceptance decisions and pre-trade protection | Ex8:Risk / market protection in Ex8:ME |
+| Regulatory report generation from case outcomes | Exchange8:Regulatory |
+| The trade/execution event stream this service observes | Exchange8:ME / Exchange8:Clearing / Exchange8:Gateway / Exchange8:OMS |
+| Order acceptance decisions and pre-trade protection | Exchange8:Risk / market protection in Exchange8:ME |
 | Tenant-authored detection rule modules | Sentin8:Func (execution host) |
 | Identity, tokens, M2M client registration | Sentin8:Auth |
 | Message delivery between services | Sentin8:Bus |
@@ -92,7 +92,7 @@
 
 | Event / input | Source |
 |---|---|
-| Trade and order lifecycle events from the matching/clearing tier | Ex8:ME / Ex8:Clearing / Ex8:Gateway / Ex8:OMS (via Sentin8:Bus) |
+| Trade and order lifecycle events from the matching/clearing tier | Exchange8:ME / Exchange8:Clearing / Exchange8:Gateway / Exchange8:OMS (via Sentin8:Bus) |
 | Tenant-authored detection rules executed over observations | Sentin8:Func |
 | Policy-set updates (scope-mirror rules for this service) | Shield (Sentin8:Policy) hot-reload |
 | Session median statistics for close-window detection | market-statistics producers |
@@ -128,7 +128,7 @@
 |---|---|---|
 | Compliance officer | Primary investigator | Reviews the severity-ranked open-case queue, works cases through investigation, records the disposition (dismissed or substantiated) |
 | Compliance supervisor | Team lead | Assigns cases to officers, monitors the unacknowledged ops-alert log, verifies closure quality |
-| Regulatory reporting analyst | Downstream consumer | Takes closed cases forward into regulatory reports (produced by Ex8:Regulatory) |
+| Regulatory reporting analyst | Downstream consumer | Takes closed cases forward into regulatory reports (produced by Exchange8:Regulatory) |
 | On-call operations engineer | Ops consumer | Acknowledges operational alerts so the unacked queue stays empty |
 | Platform administrator | Admin | Manages the Shield policy sets and the service's admin pages |
 | Venue management | Oversight | Demonstrates to regulators that surveilled patterns and dispositions exist for every alert |
@@ -154,10 +154,10 @@
 
 | Dependency | What the business relies on it for |
 |---|---|
-| Ex8:ME / Ex8:Clearing / Ex8:Gateway / Ex8:OMS | The trade and order events that make detection possible |
+| Exchange8:ME / Exchange8:Clearing / Exchange8:Gateway / Exchange8:OMS | The trade and order events that make detection possible |
 | Sentin8:Bus | Delivery of the event stream in, and the durable relaying of case/alert events out |
 | Sentin8:Func | Execution host for tenant-authored detection rules |
-| Ex8:Regulatory | The regulatory-reporting outlet that consumes case outcomes |
+| Exchange8:Regulatory | The regulatory-reporting outlet that consumes case outcomes |
 | Shield (Sentin8:Policy) | The enforced authorization decision for every action |
 | Sentin8:Auth | Identity plane, M2M client credentials (certificate-bound), token verification |
 | Sentin8:Sys | Audit intake (`POST /v1/audit`) and instance resolution |
@@ -210,7 +210,7 @@
 - Case re-open semantics after a dismissal (a follow-up detection on the
   same pattern/instrument/account) and the alert-to-case dedupe window
   length are compliance-process decisions not yet modeled.
-- Regulatory reporting consumes closed cases via Ex8:Regulatory; the exact
+- Regulatory reporting consumes closed cases via Exchange8:Regulatory; the exact
   case-outcome payload the reporting service requires is a cross-service
   contract to be finalized there.
 

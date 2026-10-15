@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:Surveillance
 // SPDX-License-Identifier: Apache-2.0
 
-//! Ex8:Surveillance core — market-abuse pattern detection.
+//! Exchange8:Surveillance core — market-abuse pattern detection.
 //!
 //! Pattern detectors over the trade/order event stream; alerts feed case
 //! management (RFW surface for compliance review). The shell wires the

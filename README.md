@@ -1,8 +1,8 @@
-# README.md: Ex8:Surveillance
+# README.md: Exchange8:Surveillance
 
 ## 1. Summary
 
-Ex8:Surveillance is the **market-surveillance** service of the exchange8
+Exchange8:Surveillance is the **market-surveillance** service of the exchange8
 vertical — the compliance tier that detects market-abuse patterns in the
 trade/order event stream and turns detections into reviewable cases. It
 implements the eight regulatory detection patterns (wash trade, spoofing,
@@ -65,8 +65,8 @@ drives:
 ```mermaid
 graph TD
     subgraph producers["Event producers (Sentin8 M2M, cert-bound)"]
-        MEW["Ex8:ME / Ex8:Clearing<br/>trade + order lifecycle events"]
-        GW["Ex8:Gateway / Ex8:OMS<br/>order events"]
+        MEW["Exchange8:ME / Exchange8:Clearing<br/>trade + order lifecycle events"]
+        GW["Exchange8:Gateway / Exchange8:OMS<br/>order events"]
     end
 
     subgraph svc["exchange8-surveillance binary (axum on sentin8::shell)"]
@@ -183,7 +183,7 @@ Pure core; concepts, not pasted signatures:
   workflow share the pattern vocabulary and evidence shape; splitting case
   management into another service would add an API tier for data that is one
   row hop apart (`surveillance_case.alert_id → surveillance_alert.id`).
-  Regulatory report generation is NOT here — it stays with Ex8:Regulatory,
+  Regulatory report generation is NOT here — it stays with Exchange8:Regulatory,
   which consumes closed cases.
 
 ## 6. Unresolved Questions / Future Designs

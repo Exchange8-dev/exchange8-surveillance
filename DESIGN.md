@@ -1,4 +1,4 @@
-# DESIGN.md: Ex8:Surveillance — Detailed Design Document
+# DESIGN.md: Exchange8:Surveillance — Detailed Design Document
 
 ## 1. Scope & Context
 
@@ -19,10 +19,10 @@
 
 **Does NOT own (delegates)**
 
-- Regulatory reports — Ex8:Regulatory consumes closed cases; this service
+- Regulatory reports — Exchange8:Regulatory consumes closed cases; this service
   only produces the detection + workflow record.
-- Where the trade/order observations come from — Ex8:ME / Ex8:Clearing /
-  Ex8:Gateway / Ex8:OMS produce the event stream; Sentin8:Bus delivers it.
+- Where the trade/order observations come from — Exchange8:ME / Exchange8:Clearing /
+  Exchange8:Gateway / Exchange8:OMS produce the event stream; Sentin8:Bus delivers it.
 - Tenant-authored detection modules (layering, momentum ignition, insider,
   front-running, excessive crossing when tenant-authored) — Sentin8:Func
   executes them; this service defines only the `Pattern`/`Alert` contract.
@@ -34,10 +34,10 @@
 ```mermaid
 graph TD
     subgraph vertical["exchange8 vertical (db exchange8)"]
-        MEW["Ex8:ME + Ex8:Clearing<br/>trade/execution events"]
-        GW["Ex8:Gateway + Ex8:OMS<br/>order + cancel events"]
-        REG["Ex8:Regulatory<br/>(case-outcome consumer)"]
-        PRO["Ex8:Market protection<br/>(quote-stuffing interplay)"]
+        MEW["Exchange8:ME + Exchange8:Clearing<br/>trade/execution events"]
+        GW["Exchange8:Gateway + Exchange8:OMS<br/>order + cancel events"]
+        REG["Exchange8:Regulatory<br/>(case-outcome consumer)"]
+        PRO["Exchange8:Market protection<br/>(quote-stuffing interplay)"]
     end
 
     subgraph platform["Sentin8 platform"]
@@ -49,7 +49,7 @@ graph TD
         PROXY["Sentin8:Proxy (single ingress, TLS)"]
     end
 
-    SVC["Ex8:Surveillance<br/>exchange8-surveillance"]
+    SVC["Exchange8:Surveillance<br/>exchange8-surveillance"]
 
     MEW -->|"exchange8:*:trade:* events"| BUS
     GW -->|"order events"| BUS
@@ -146,7 +146,7 @@ graph TD
 ```mermaid
 sequenceDiagram
     autonumber
-    participant P as Producer (Ex8:ME / Clearing / Gateway)
+    participant P as Producer (Exchange8:ME / Clearing / Gateway)
     participant B as Sentin8:Bus
     participant C as Bus consumer task
     participant D as Detector (Wash | Spoofing | MarkingClose | Func module)
