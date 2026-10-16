@@ -473,7 +473,7 @@ sequenceDiagram
 
     W->>DB: BEGIN — alert + case + outbox + audit rows
     W->>W: CRASH before relay (tx COMMITTED)
-    Note over DB: alert/case UNIQUE intact; outbox unrelayed; audit unpushed
+    Note over W,R: alert/case UNIQUE intact, outbox unrelayed, audit unpushed
     R->>DB: boot: SELECT unrelayed outbox
     R->>DB: POST /v1/produce (idempotency_key = row id)
     Note over R: Bus dedupes → no duplicate consumer work
