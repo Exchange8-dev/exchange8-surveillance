@@ -85,7 +85,6 @@ graph TD
             RELAY["outbox relay → Bus"]
             JOURNAL["audit pusher → Sys"]
             DRAIN["graceful drain"]
-            ALLOC["mimalloc global allocator"]
         end
     end
     PG[("PostgreSQL 18<br/>db exchange8 · schema surveillance<br/>role exchange8_surveillance_service")]
@@ -112,7 +111,6 @@ graph TD
 The binary (`src/main.rs`) is a Sentin8 Shell assembly:
 `Sentin8Shell::new("exchange8:surveillance", "EXCHANGE8_SURVEILLANCE")` with
 registration printing, `with_simple_state()`, and `with_router(extend_router)`
-that mounts the policy-admin API. The global allocator is mimalloc
 (`#[global_allocator]`), covering all in-process tokio workers. Boot, DB
 pool, drain, relay and audit pusher are shell-provided. The detectors run on
 the Bus-consumer task — the HTTP router carries health + admin endpoints
@@ -427,7 +425,6 @@ sequenceDiagram
   `exchange8-surveillance-tls` workload resolves host context DB-free via
   `GET /v1/resolve/hostname` (`sentin8:sys:instances:read`).
   Post-quantum only; no classical fallback.
-- **Allocator** — mimalloc global allocator covers HTTP, bus-consumer,
   relay, journal pusher and future purge workers alike.
 
 ## 6. Failure Modes & Recovery

@@ -2,7 +2,11 @@
   "vertical": "exchange8",
   "services": [
     {
-      "service_type": "exchange8:surveillance"
+      "service_type": "exchange8:surveillance",
+      "telemetry_property": {
+        "slug": "surveillance",
+        "name": "Exchange8:Surveillance Telemetry"
+      }
     }
   ]
 }

@@ -12,7 +12,6 @@ observation stream, plus the case-management workflow (open â†’ investigating â†
 closed) that compliance staff drive from the admin surface, and the
 unacknowledged operational-alert queue for the venue's alert log. It is a Rust
 axum binary built on the platform `sentin8::shell` crate (Sentin8 Shell):
-registration, DB pool, health, Shield policy-admin mount, mimalloc allocator,
 graceful drain.
 
 The detection core is a pure Rust library (`services/surveillance/src/surveillance.rs`):
@@ -80,7 +79,6 @@ graph TD
     end
 
     subgraph platform["Sentin8 platform"]
-        SHELL["sentin8::shell<br/>DB pool, drain, mimalloc"]
         AUTH["Sentin8:Auth (issuer, DCR)"]
         BUS["Sentin8:Bus (POST /v1/produce)"]
         SYS["Sentin8:Sys (POST /v1/audit)"]
