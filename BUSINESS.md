@@ -1,4 +1,4 @@
-# BUSINESS.md: Exchange8:Surveillance — Business Requirements & Functionality
+# Exchange8:Surveillance — Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
 > Exchange8:Surveillance **does for the business**. For architecture read
