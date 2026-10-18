@@ -13,6 +13,7 @@
 
 // Workers (bus consumers, session
 // supervisors, purge jobs) are in-process tokio tasks, so the
+mod openapi;
 mod registration;
 mod surveillance;
 
