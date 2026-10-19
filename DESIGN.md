@@ -1,16 +1,16 @@
-# Exchange8:Surveillance — Detailed Design Document
+# Exchange8:Surveillance - Detailed Design Document
 
 ## 1. Scope & Context
 
 **Owns**
 
-- Detection alerts (`surveillance.surveillance_alert`) — one row per
+- Detection alerts (`surveillance.surveillance_alert`) - one row per
   detection: pattern (CHECK-constrained to the eight pattern keys),
-  instrument, account, confidence (0–100), evidence JSONB.
-- Case management (`surveillance.surveillance_case`) — the compliance
+  instrument, account, confidence (0-100), evidence JSONB.
+- Case management (`surveillance.surveillance_case`) - the compliance
   workflow per alert: `open / investigating / closed`, dismissal flag,
   assignee, open/close timestamps, FK to the alert.
-- Operational alerts (`surveillance.alert`) — the unacknowledged ops-alert
+- Operational alerts (`surveillance.alert`) - the unacknowledged ops-alert
   queue (`admin_id IS NULL` = unacked; partial index for the ack sweep).
 - The pure detection core: the eight `Pattern`s with severity ranking, the
   `Observation` contract, the wash-trade / spoofing / marking-the-close
@@ -19,15 +19,15 @@
 
 **Does NOT own (delegates)**
 
-- Regulatory reports — Exchange8:Regulatory consumes closed cases; this service
+- Regulatory reports - Exchange8:Regulatory consumes closed cases; this service
   only produces the detection + workflow record.
-- Where the trade/order observations come from — Exchange8:ME / Exchange8:Clearing /
+- Where the trade/order observations come from - Exchange8:ME / Exchange8:Clearing /
   Exchange8:Gateway / Exchange8:OMS produce the event stream; Sentin8:Bus delivers it.
 - Tenant-authored detection modules (layering, momentum ignition, insider,
-  front-running, excessive crossing when tenant-authored) — Sentin8:Func
+  front-running, excessive crossing when tenant-authored) - Sentin8:Func
   executes them; this service defines only the `Pattern`/`Alert` contract.
-- Identity, tokens, M2M client registration — Sentin8:Auth.
-- Trigger scheduling — Sentin8:Cron (none declared by this service today).
+- Identity, tokens, M2M client registration - Sentin8:Auth.
+- Trigger scheduling - Sentin8:Cron (none declared by this service today).
 
 ### System context
 
@@ -113,7 +113,7 @@ The binary (`src/main.rs`) is a Sentin8 Shell assembly:
 registration printing, `with_simple_state()`, and `with_router(extend_router)`
 (`#[global_allocator]`), covering all in-process tokio workers. Boot, DB
 pool, drain, relay and audit pusher are shell-provided. The detectors run on
-the Bus-consumer task — the HTTP router carries health + admin endpoints
+the Bus-consumer task - the HTTP router carries health + admin endpoints
 only.
 
 ```mermaid
@@ -160,9 +160,9 @@ sequenceDiagram
         D-->>C: None
     else signature completes
         D-->>C: Alert {pattern, confidence, evidence}
-        C->>DB: BEGIN — INSERT surveillance.surveillance_alert
-        C->>DB: INSERT surveillance.surveillance_case (state open) — same tx
-        C->>DB: INSERT surveillance.outbox + surveillance.audit_journal — same tx
+        C->>DB: BEGIN - INSERT surveillance.surveillance_alert
+        C->>DB: INSERT surveillance.surveillance_case (state open) - same tx
+        C->>DB: INSERT surveillance.outbox + surveillance.audit_journal - same tx
         C->>DB: COMMIT
     end
     R->>DB: SELECT unrelayed outbox rows
@@ -186,14 +186,14 @@ sequenceDiagram
     participant CM as CaseManager
     participant DB as db exchange8 (schema surveillance)
 
-    O->>CM: open(Alert) — shell dedupes per (pattern, instrument, account, day)
+    O->>CM: open(Alert) - shell dedupes per (pattern, instrument, account, day)
     CM-->>O: case_id (monotonic)
     O->>CM: transition(case_id → investigating)
     CM-->>O: ok
     O->>CM: transition(case_id → closed {dismissed})
     CM-->>O: ok
     O->>DB: case row UPDATE (state, dismissed flag, closed_at)
-    O->>O: triage via open_by_severity() — descending Pattern::severity
+    O->>O: triage via open_by_severity() - descending Pattern::severity
     alt unknown case_id
         CM-->>O: false (no transition)
     end
@@ -278,7 +278,7 @@ Per-table notes:
 
 | Table | Visibility | Notes |
 |---|---|---|
-| `surveillance.surveillance_alert` | env-scoped, RLS FORCE | pattern ∈ {wash_trade, spoofing, layering, momentum_ignition, insider_trading, front_running, marking_the_close, excessive_crossing}; confidence CHECK 0–100; index `(env_id, pattern)` |
+| `surveillance.surveillance_alert` | env-scoped, RLS FORCE | pattern ∈ {wash_trade, spoofing, layering, momentum_ignition, insider_trading, front_running, marking_the_close, excessive_crossing}; confidence CHECK 0-100; index `(env_id, pattern)` |
 | `surveillance.surveillance_case` | env-scoped, RLS FORCE | FK to `surveillance_alert(id)`; state CHECK open/investigating/closed; index `(env_id, state)` for the queue view |
 | `surveillance.alert` | env-scoped, RLS FORCE | ops alert log; unacked = `admin_id IS NULL`; partial index `(env_id) WHERE admin_id IS NULL` |
 | `surveillance.outbox` | env-scoped, RLS FORCE | DBX §6.7 producer table; partial index on `relayed = false`; `pg_notify('surveillance_outbox_changed')` trigger |
@@ -316,7 +316,7 @@ stateDiagram-v2
 ## 4. API Surface
 
 Grouped by audience; the authorization gate for all handler surfaces is the
-8-step platform pipeline — bearer verify → tenant resolve → feature gate →
+8-step platform pipeline - bearer verify → tenant resolve → feature gate →
 **Shield (`exchange8:surveillance-policy` scope-mirror, enforced)** → RLS
 context → execute → audit. The HTTP router mounts health, `/openapi.json` and
 the Shield policy-admin API only; domain work arrives via bus events and
@@ -327,14 +327,14 @@ evaluates today is `exchange8:surveillance:alert` (tests/policy.rs
 | Audience | Surface | Gate | Emits |
 |---|---|---|---|
 | System (M2M) | Detection consume (`exchange8:surveillance:alert` action) | scope-mirror permit / `sentin8:sys` admin scopes | outbox event (see §10) |
-| System (M2M) | Bus produce/consume workloads `exchange8:surveillance` (+ `surveillance` short spelling) | `sentin8:bus:produce` / `sentin8:bus:consume` scopes | — |
-| System (M2M) | Policy hot-reload + stat workloads `exchange8:surveillance-policy` / `surveillance-policy` | `sentin8:bus:consume` / `sentin8:stat:measure` scopes | — |
-| System (M2M) | Audit journal pusher workload `surveillance-audit` | `sentin8:sys:audit:write` scope | — |
-| System (M2M) | TLS host-context resolver workload `exchange8-surveillance-tls` | `sentin8:sys:instances:read` scope (`GET /v1/resolve/hostname`) | — |
-| Admin (RFW) | `/v1/admin/ui/alerts` + `/v1/admin/alerts` (route `alerts`, label `Alerts`, icon `0xe8d2`) | `exchange8:surveillance:read` / role `exchange8:admin` | — |
-| Admin (RFW) | `/v1/admin/ui/cases` + `/v1/admin/cases` (route `cases`, label `Cases`, icon `0xe8a0`) | `exchange8:surveillance:read` / `:write` / role `exchange8:admin` | — |
+| System (M2M) | Bus produce/consume workloads `exchange8:surveillance` (+ `surveillance` short spelling) | `sentin8:bus:produce` / `sentin8:bus:consume` scopes | - |
+| System (M2M) | Policy hot-reload + stat workloads `exchange8:surveillance-policy` / `surveillance-policy` | `sentin8:bus:consume` / `sentin8:stat:measure` scopes | - |
+| System (M2M) | Audit journal pusher workload `surveillance-audit` | `sentin8:sys:audit:write` scope | - |
+| System (M2M) | TLS host-context resolver workload `exchange8-surveillance-tls` | `sentin8:sys:instances:read` scope (`GET /v1/resolve/hostname`) | - |
+| Admin (RFW) | `/v1/admin/ui/alerts` + `/v1/admin/alerts` (route `alerts`, label `Alerts`, icon `0xe8d2`) | `exchange8:surveillance:read` / role `exchange8:admin` | - |
+| Admin (RFW) | `/v1/admin/ui/cases` + `/v1/admin/cases` (route `cases`, label `Cases`, icon `0xe8a0`) | `exchange8:surveillance:read` / `:write` / role `exchange8:admin` | - |
 | Admin | Shield policy-admin API (`exchange8:surveillance:policy:read` / `:write`) | role `exchange8:surveillance:admin` | `sentin8:sys:policy` family |
-| Ops | `GET /v1/health`, `/openapi.json` | unauthenticated (health), none | — |
+| Ops | `GET /v1/health`, `/openapi.json` | unauthenticated (health), none | - |
 
 Declared scopes: `exchange8:surveillance:read` / `exchange8:surveillance:write`
 / `exchange8:alert:read` / `exchange8:alert:ack` (admin-role grants under
@@ -351,7 +351,7 @@ sequenceDiagram
     participant B as Sentin8:Bus
     participant T as Trigger (case-management consumer / Cron)
 
-    D->>DB: BEGIN — INSERT surveillance_alert + surveillance_case
+    D->>DB: BEGIN - INSERT surveillance_alert + surveillance_case
     D->>DB: INSERT surveillance.outbox (payload + idempotency)
     D->>DB: COMMIT (pg_notify surveillance_outbox_changed)
     R->>DB: SELECT unrelayed outbox rows
@@ -376,51 +376,51 @@ sequenceDiagram
     A->>DB: SELECT unpushed audit_journal rows
     A->>S: POST /v1/audit (sentin8:sys:audit:write)
     S-->>A: 200 → mark pushed
-    Note over A,S: Sys outage never drops audit — rows retry until pushed
+    Note over A,S: Sys outage never drops audit - rows retry until pushed
 ```
 
 ## 5. Cross-Cutting Concerns
 
-- **Authentication** — Sentin8:Auth is the only issuer. Detection work is
+- **Authentication** - Sentin8:Auth is the only issuer. Detection work is
   system-driven: cert-bound M2M `client_credentials` tokens (DCR-registered
   per workload: `exchange8:surveillance`, `exchange8:surveillance-policy`,
   `surveillance-policy`, `surveillance-audit`,
   `exchange8-surveillance-tls`). DCR is fail-closed: only workloads present
   in `sentin8_service_workloads` (seeded by `sentin8-cli vertical enroll`)
   can register.
-- **Authorization** — the scope-mirror policy set (`origin='platform'`,
+- **Authorization** - the scope-mirror policy set (`origin='platform'`,
   `mode='enforced'`) permits the declared action
   (`exchange8:surveillance:alert`) for callers holding the matching scope or
   the platform-admin scopes (`sentin8:sys:admin`, `sentin8:sys:org:admin`,
   `sentin8:sys:env:admin`). No-set → deny (fail-closed); shadow is an
   emergency rollback lever only; `token_tp` never bypasses policy
   (tests/policy.rs proves all of these against the real seeded text).
-- **Tenant resolution + RLS** — every table has `ENABLE` + `FORCE ROW LEVEL
+- **Tenant resolution + RLS** - every table has `ENABLE` + `FORCE ROW LEVEL
   SECURITY` with policies `sentin8_context_initialized() AND env_id =
   sentin8_current_env_id()`; the context is set with
   `SELECT sentin8_set_tenant_context(...)` (`set_config(..., true)`,
-  transaction-local) on the **same connection** as the data statements —
+  transaction-local) on the **same connection** as the data statements -
   the async helper must be awaited or RLS silently sees no context. Explicit
   `env_id = $N` predicates remain the primary defense; RLS is the backstop.
   Role `exchange8_surveillance_service` carries no `BYPASSRLS`.
-- **Shield as the engine's only name** — the embedded declarative policy
+- **Shield as the engine's only name** - the embedded declarative policy
   engine (`sentin8-policy`) is branded Shield in docs, comments and UI; the
   vendor name appears only in the dependency mapping.
-- **Idempotency** — case opening dedupes per (pattern, instrument, account,
+- **Idempotency** - case opening dedupes per (pattern, instrument, account,
   day) in the shell consumer; bus produce rides `idempotency_key` = outbox
   row id; detector buffers fire-once-per-signature (spoofing clears its
   buffer on fire) so replays do not duplicate alerts.
-- **Rate limiting / bot protection** — ingress tier is the platform edge
+- **Rate limiting / bot protection** - ingress tier is the platform edge
   (Sentin8:Proxy); service-local rate policies ride the Shield policy
   surface (per-tenant sets), not bespoke code.
-- **Audit journaling** — every state transition writes
+- **Audit journaling** - every state transition writes
   `surveillance.audit_journal` (same transaction where possible); the
   pusher drains to `POST /v1/audit`; Sys outage retries without loss.
-- **Drain** — `sentin8::shell` graceful drain on upgrade: HTTP stops
+- **Drain** - `sentin8::shell` graceful drain on upgrade: HTTP stops
   accepting, in-flight requests finish, the relay/journal pusher checkpoint
   unrelayed/unpushed rows, and Sentin8:Captain's `upgrade-instance` swaps
   the binary (rolling, zero-downtime).
-- **TLS** — terminated in-process by `sentin8-tls` behind Sentin8:Proxy
+- **TLS** - terminated in-process by `sentin8-tls` behind Sentin8:Proxy
   (single ingress, SNI `exchange8-surveillance.sys.ops…`); the
   `exchange8-surveillance-tls` workload resolves host context DB-free via
   `GET /v1/resolve/hostname` (`sentin8:sys:instances:read`).
@@ -468,7 +468,7 @@ sequenceDiagram
     participant DB as db exchange8
     participant R as Relay (next boot / retry loop)
 
-    W->>DB: BEGIN — alert + case + outbox + audit rows
+    W->>DB: BEGIN - alert + case + outbox + audit rows
     W->>W: CRASH before relay (tx COMMITTED)
     Note over W,R: alert/case UNIQUE intact, outbox unrelayed, audit unpushed
     R->>DB: boot: SELECT unrelayed outbox
@@ -506,24 +506,24 @@ graph LR
     AL -->|"M2M POST /v1/audit"| SYS[("Sentin8:Sys")]
 ```
 
-- **Task layout** — one HTTP acceptor; one bus-consumer task (the detector
+- **Task layout** - one HTTP acceptor; one bus-consumer task (the detector
   driver); one relay task (LISTEN `surveillance_outbox_changed` + periodic
   unrelayed poll); one audit pusher. Detector state is owned exclusively by
-  the consumer task (single writer per (account, instrument) buffers) — no
+  the consumer task (single writer per (account, instrument) buffers) - no
   cross-task shared mutable state, no mutex contention on the observation
   path.
-- **Pool sizing** — the shared `sentin8_config::pg_pool::connect` caps
+- **Pool sizing** - the shared `sentin8_config::pg_pool::connect` caps
   connections (default 3, overridable) so ~20 services cannot exhaust
   PostgreSQL. Relay and journal use the same pool; context is set
   transaction-locally per statement set.
-- **Hot paths & caches** — detector bookkeeping is pure HashMap math
+- **Hot paths & caches** - detector bookkeeping is pure HashMap math
   (per-(account, instrument) counters/buffers); only the completed signature
   touches the DB. The only cache beyond that is the Shield policy set
   (hot-reload consumer keeps loaded sets fresh).
-- **Backpressure** — outbox partial index bounds the relay scan; unrelayed
+- **Backpressure** - outbox partial index bounds the relay scan; unrelayed
   rows retry with backoff so a Bus outage does not spin; the drain path
   checkpoints before shutdown. The consumer task applies natural backpressure
-  by processing the stream sequentially — detectors are cheap (O(1)
+  by processing the stream sequentially - detectors are cheap (O(1)
   counters, O(burst) buffers) so the normalization step is the pace-setter.
 
 ## 8. Invariants, Insecure-Defaults Rejected, Unsafe Rationale
@@ -538,35 +538,35 @@ Invariants (always true):
    transaction.
 3. Case ids are monotonic (1, 2, 3 …) per manager instance; transitions
    never resurrect a closed case with a new id.
-4. A detector fires exactly once per completed signature — the spoofing
+4. A detector fires exactly once per completed signature - the spoofing
    buffer clears on fire, the wash counter counts past its threshold, and
    the close detector depends on per-instrument medians (missing/zero
    median ⇒ no alert, never division by a degenerate basis).
-5. Confidence is always within 0–100 (DB CHECK mirrors the core's
+5. Confidence is always within 0-100 (DB CHECK mirrors the core's
    computation).
 6. Tenant context and data statements always run on the same connection;
    `sentin8_set_tenant_context` is awaited.
-7. The scope-mirror never covers an action absent from the registration —
+7. The scope-mirror never covers an action absent from the registration -
    `declared_mirror_covers_every_handler_action` fails the build otherwise.
 8. No plaintext credentials; no role carries `BYPASSRLS`; the pattern key
    set in SQL (CHECK) and in the core (`Pattern::key`) stays identical.
 
 Insecure defaults rejected:
 
-- **Alerting on a single observation** — every built-in detector requires the
+- **Alerting on a single observation** - every built-in detector requires the
   pattern's abuse signature (repeated self-crosses, a buffered cancel burst,
   an outsized close-window notional); a one-off cross is not a wash trade.
-- **`danger_accept_invalid_certs` / hand-rolled CA loading** — TLS is
+- **`danger_accept_invalid_certs` / hand-rolled CA loading** - TLS is
   in-process via `sentin8-tls` (post-quantum, root CA in the OS trust
   store).
-- **Direct cross-schema/table joins into other services** — cross-service
+- **Direct cross-schema/table joins into other services** - cross-service
   data flows are membus/bus/owner-API per the access-order rule (this
   service declares zero cross-schema grants today).
-- **Static superuser service DSN** — the service role is unprivileged,
+- **Static superuser service DSN** - the service role is unprivileged,
   non-bypass, database-`exchange8`-only.
-- **Hardwired tenant detection rules** — tenant rules ride Sentin8:Func
+- **Hardwired tenant detection rules** - tenant rules ride Sentin8:Func
   modules and declarative triggers, never platform code.
-- **Severity as a mutable per-alert score** — triage ordering would become
+- **Severity as a mutable per-alert score** - triage ordering would become
   gameable; severity is a `Pattern` constant.
 
 No `unsafe` blocks exist in this service; the unsafe-rationale section is
@@ -578,7 +578,7 @@ pattern/confidence columns).
 
 ```mermaid
 graph TD
-    PYRAMID["Test pyramid — exchange8-surveillance"] --> UT["Unit (pure core, src/surveillance.rs tests)"]
+    PYRAMID["Test pyramid - exchange8-surveillance"] --> UT["Unit (pure core, src/surveillance.rs tests)"]
     PYRAMID --> PWT["Policy wiring (tests/policy.rs)"]
     PYRAMID --> SQL["SQL matrix (tests/sql_matrix.rs, live DB)"]
     PYRAMID --> E2E["Vertical E2E (e2e-ts/, UI + BFF only)"]
@@ -595,32 +595,32 @@ graph TD
     E2E --> E1["human-parity flows; no direct SQL/backend"]
 ```
 
-- **Unit layer** — the pure core owns every detection-semantics assertion:
+- **Unit layer** - the pure core owns every detection-semantics assertion:
   the alert-once-per-signature behavior, per-(account, instrument) counter
   independence, cancel-ratio arithmetic (executed orders in the
   denominator, confidence from the ratio), close-window inclusivity and
   median guards, triage ordering with stable same-severity ties, and case-id
   monotonicity.
-- **Policy layer** — proves the *real* seeded scope-mirror text evaluates
+- **Policy layer** - proves the *real* seeded scope-mirror text evaluates
   fail-closed, respects mode and origin, isolates sets per `env_id`, keeps
   M2M parity, and dry-runs clean at enroll.
-- **SQL matrix** — live PostgreSQL via the non-bypass `exchange8_probe`
+- **SQL matrix** - live PostgreSQL via the non-bypass `exchange8_probe`
   role: policy coverage derived from this service's own `init.sql` (every
   declared table is FORCE-RLS'd with a select policy), plus the behavioral
   RLS matrix (no context → 0 rows, insert rejected, own env → exact probe
   row, cross env → 0 rows) over one rolled-back transaction. Skips silently
   when the DB is unreachable so test runs stay hermetic.
-- **Deliberately not tested here** — platform TLS/RLS plumbing itself,
+- **Deliberately not tested here** - platform TLS/RLS plumbing itself,
   Sentin8:Bus delivery guarantees, Shield engine internals: covered by the
   platform's own test strategy docs.
-- **E2E** — the vertical's `e2e-ts` suite drives the real UI through BFF
+- **E2E** - the vertical's `e2e-ts` suite drives the real UI through BFF
   only (no direct SQL), so surveillance surfaces are exercised as a human
   would.
 
 ## 10. Open Questions
 
 - The RFW admin pages (`alerts`, `cases`) are registered but their data/UI
-  handlers are not mounted in this binary — wiring the admin surface for
+  handlers are not mounted in this binary - wiring the admin surface for
   these resources is outstanding.
 - Observation sourcing (the bus consumer that produces `Observation`s from
   the trade/order event stream, consumer-group configuration, and the

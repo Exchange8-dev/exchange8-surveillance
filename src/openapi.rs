@@ -55,7 +55,7 @@ async fn health() {}
     components(schemas()),
     security(),
     tags(
-        (name = "surveillance", description = "Exchange8:Surveillance — policy admin + health only"),
+        (name = "surveillance", description = "Exchange8:Surveillance - policy admin + health only"),
         (name = "policy", description = "Shield policy administration (shared surface)"),
     ),
 )]

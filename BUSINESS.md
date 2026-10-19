@@ -1,4 +1,4 @@
-# Exchange8:Surveillance — Business Requirements & Functionality
+# Exchange8:Surveillance - Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
 > Exchange8:Surveillance **does for the business**. For architecture read
@@ -15,7 +15,7 @@
   disposition.
 - Let the compliance desk **work by severity**: insider-like trading and
   front-running outrank spoofing-family patterns, which outrank close-window
-  and self-crossing volume — the triage view always exposes the most severe
+  and self-crossing volume - the triage view always exposes the most severe
   open cases first.
 - **Separate routine trading from abuse**: detectors require the pattern's
   actual signature (repeated self-crosses, a cancel burst, an outsized
@@ -57,12 +57,12 @@
 
 | Capability | Business rule |
 |---|---|
-| Pattern vocabulary | Exactly eight patterns exist — wash trade, spoofing, layering, momentum ignition, insider-like trading, front-running, marking the close, excessive self-crossing — and each persists under its stable key |
-| Severity ranking | Insider-like trading and front-running rank highest (4); the spoofing family ranks 3; close-window and self-crossing rank 2 — severity is fixed per pattern class, not per alert |
+| Pattern vocabulary | Exactly eight patterns exist - wash trade, spoofing, layering, momentum ignition, insider-like trading, front-running, marking the close, excessive self-crossing - and each persists under its stable key |
+| Severity ranking | Insider-like trading and front-running rank highest (4); the spoofing family ranks 3; close-window and self-crossing rank 2 - severity is fixed per pattern class, not per alert |
 | Wash trade | Counts self-crosses (same beneficial owner on both sides) per account and instrument; a single accidental cross never alerts; the alert fires exactly once when the configured repetition threshold is reached |
 | Spoofing | Tracks orders cancelled before execution against the account's executed orders in the window; alerts only when the volume floor is met AND the cancel ratio reaches the configured share; confidence derives from the ratio itself |
 | Marking the close | Flags trades inside the close window whose notional exceeds a configured multiple of the session's median trade; trades missing a median basis never alert |
-| Evidence | Every alert carries its supporting observations, making the case file self-contained — no re-derivation from raw events |
+| Evidence | Every alert carries its supporting observations, making the case file self-contained - no re-derivation from raw events |
 
 ### Case management
 
@@ -70,7 +70,7 @@
 |---|---|
 | One alert, one case | Every detection opens exactly one case; duplicate deliveries of the same detection (same pattern, instrument, account, day) do not create a second case |
 | Workflow states | A case moves open → investigating → closed; the closure records whether it was dismissed |
-| Case identity | Case identifiers are strictly increasing — no identifier is ever re-used |
+| Case identity | Case identifiers are strictly increasing - no identifier is ever re-used |
 | Triage | The open-case view sorts by descending pattern severity; same-severity cases keep open order; closed cases leave the queue |
 | Assignment | A case can be assigned to a named reviewer during the workflow |
 
@@ -102,7 +102,7 @@
 1. A detection always carries its evidence: the stored alert and the case
    that references it contain the supporting observations, never just a
    verdict.
-2. One detection, one case — duplicate deliveries in the same day-bucket
+2. One detection, one case - duplicate deliveries in the same day-bucket
    (pattern, instrument, account) collapse to a single case.
 3. Built-in detectors require the abuse signature: a single self-cross
    is never a wash-trade alert; a balanced order/cancel mix is never a
@@ -119,8 +119,8 @@
    the token type (user or M2M) never bypasses a policy decision.
 8. All alert data is tenant-isolated end to end (row-level security +
    explicit tenant predicates); no service role can bypass it.
-9. Operational alerts keep an acknowledgement trail — who acknowledged
-   and when — and remain searchable until acknowledged.
+9. Operational alerts keep an acknowledgement trail - who acknowledged
+   and when - and remain searchable until acknowledged.
 
 ## 6. Target-User Roles & Use Cases
 
@@ -139,7 +139,7 @@
   the observation stream; no alert is dropped after a platform outage (outbox
   replay is idempotent).
 - **Alert precision**: built-in detectors alert only on the pattern's abuse
-  signature — zero alerts for single accidental crosses and balanced
+  signature - zero alerts for single accidental crosses and balanced
   order/cancel profiles.
 - **Triage discipline**: the queue always surfaces the most severe open
   case first; no open case is invisible to the queue.
@@ -195,14 +195,14 @@
 ## 10. Open Business Questions
 
 - The compliance-desk workflow is designed but its admin data/UI handlers
-  are not mounted yet — the RFW `alerts` and `cases` pages exist as
+  are not mounted yet - the RFW `alerts` and `cases` pages exist as
   registrations only.
 - The observation wiring from the exchange's trade/order events to detector
   input (consumer-group topology and the duplicate-alert day-bucket dedupe
   it must implement) is designed but not yet connected.
 - The remaining built-in detectors (layering, momentum ignition,
   insider-like trading, front-running, excessive self-crossing) currently
-  land via tenant-authored rules — which of them should the venue ship as
+  land via tenant-authored rules - which of them should the venue ship as
   built-in baselines is a rule-library decision.
 - Where the acknowledged operational-alert producers write from (which
   surfaces create `surveillance.alert` rows) and the ack flow's admin

@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:Surveillance
 // SPDX-License-Identifier: Apache-2.0
 
-//! Exchange8:SURVEILLANCE service binary — market-abuse detection + case management.
+//! Exchange8:SURVEILLANCE service binary - market-abuse detection + case management.
 //!
 //! Design: `services/surveillance/DESIGN.md`. Core logic in the sibling
 //! modules; this shell wires the tokio HTTP/TLS surface via the platform
@@ -21,7 +21,7 @@ fn extend_router(
     app: axum::Router<std::sync::Arc<sentin8::shell::AppState>>,
     _state: std::sync::Arc<sentin8::shell::AppState>,
 ) -> axum::Router<std::sync::Arc<sentin8::shell::AppState>> {
-    // ── Shield policy-admin API — shared implementation;
+    // ── Shield policy-admin API - shared implementation;
     // the shell AppState already implements HasPolicyAdmin.
     sentin8::shell::mount_policy_admin(
         // Detectors run on the Bus consumer task (DESIGN.md §2);

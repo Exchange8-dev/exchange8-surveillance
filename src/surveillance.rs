@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:Surveillance
 // SPDX-License-Identifier: Apache-2.0
 
-//! Exchange8:Surveillance core — market-abuse pattern detection.
+//! Exchange8:Surveillance core - market-abuse pattern detection.
 //!
 //! Pattern detectors over the trade/order event stream; alerts feed case
 //! management (RFW surface for compliance review). The shell wires the
@@ -20,17 +20,17 @@
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Pattern {
-    /// Wash trade — same beneficial owner both sides.
+    /// Wash trade - same beneficial owner both sides.
     WashTrade,
-    /// Spoofing — orders placed then cancelled before execution, moving price.
+    /// Spoofing - orders placed then cancelled before execution, moving price.
     Spoofing,
-    /// Layering — multiple price levels placed then pulled.
+    /// Layering - multiple price levels placed then pulled.
     Layering,
-    /// Momentum ignition — initiating trades to trigger others' algos.
+    /// Momentum ignition - initiating trades to trigger others' algos.
     MomentumIgnition,
-    /// Insider-like trading — unusual size/price/timing ahead of news.
+    /// Insider-like trading - unusual size/price/timing ahead of news.
     InsiderTrading,
-    /// Front-running — trading ahead of a client order.
+    /// Front-running - trading ahead of a client order.
     FrontRunning,
     /// Marking the close/end-of-day manipulation.
     MarkingTheClose,
@@ -187,7 +187,7 @@ impl SpoofingDetector {
             if ratio >= self.ratio_bps {
                 let evidence = v.clone();
                 v.clear();
-                // ratio is bps (0..=10_000) — compute in u32 to avoid overflow.
+                // ratio is bps (0..=10_000) - compute in u32 to avoid overflow.
                 let confidence = (ratio * 100 / 10_000).min(100) as u8;
                 return Some(Alert {
                     pattern: Pattern::Spoofing,
@@ -267,7 +267,7 @@ impl CaseManager {
         }
     }
 
-    /// Open a case for an alert (idempotent per evidence signature — the
+    /// Open a case for an alert (idempotent per evidence signature - the
     /// shell dedupes by (pattern, instrument, account, day)).
     pub fn open(&mut self, alert: Alert) -> u64 {
         let id = self.next_case_id;
@@ -455,7 +455,7 @@ mod tests {
     }
 
     // -------------------------------------------------------------------
-    // Untested-edge top-up — the untested edges of the pure detection core.
+    // Untested-edge top-up - the untested edges of the pure detection core.
     // -------------------------------------------------------------------
 
     fn custom(
@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn wash_trade_accounts_are_independent() {
-        // Threshold 2: two different accounts each cross once — no alert
+        // Threshold 2: two different accounts each cross once - no alert
         // (per-(account, instrument) counters, never global).
         let mut d = WashTradeDetector::new(2);
         assert!(d.observe(&custom(1, 1, 1, 100, true, true)).is_none());
@@ -542,7 +542,7 @@ mod tests {
             confidence: 50,
             evidence: vec![],
         };
-        // Same severity (3) — stable sort keeps first-opened first.
+        // Same severity (3) - stable sort keeps first-opened first.
         m.open(mk(Pattern::Spoofing));
         m.open(mk(Pattern::WashTrade));
         let triage = m.open_by_severity();
