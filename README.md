@@ -1,5 +1,8 @@
-# README.md: Exchange8:Surveillance
-
+# Exchange8:Surveillance
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](../../LICENSE)
+[![Built with Rust](https://img.shields.io/badge/Built%20with-Rust-orange.svg)](https://www.rust-lang.org/)
+[![Docs](https://img.shields.io/badge/docs/read-3aa757.svg)](https://exchange8.dev/docs/products/surveillance)
+[![Website](https://img.shields.io/badge/website-exchange8.dev-1a73e8.svg)](https://exchange8.dev)
 ## 1. Summary
 
 Exchange8:Surveillance is the **market-surveillance** service of the exchange8
