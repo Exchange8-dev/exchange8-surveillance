@@ -211,4 +211,4 @@ Pure core; concepts, not pasted signatures:
 
 ---
 
-**Design attribution:** exchange8:surveillance and its underlying concepts were designed by Hamid Jahanzad <Hamid@Jahanzad.com>.
+**Architecture & Design:** exchange8:surveillance and its underlying concepts were designed by [Hamid Jahanzad](https://www.linkedin.com/in/hamidjahanzad/).
