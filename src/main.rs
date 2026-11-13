@@ -14,6 +14,15 @@
 // Workers (bus consumers, session
 // supervisors, purge jobs) are in-process tokio tasks, so the
 mod openapi;
+
+// The utoipa dump as a fn pointer for registration.rs (which cannot
+// name crate::openapi - tests embed registration.rs into harness crates
+// with no openapi module; see registration.rs).
+static OPENAPI_DUMP: fn() -> serde_json::Value = || {
+    use utoipa::OpenApi as _;
+    serde_json::to_value(openapi::SurveillanceOpenApi::openapi()).unwrap_or(serde_json::Value::Null)
+};
+
 mod registration;
 mod surveillance;
 
